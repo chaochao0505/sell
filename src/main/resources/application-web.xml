@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:tx="http://www.springframework.org/schema/tx" xmlns:util="http://www.springframework.org/schema/util"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="
+       http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd
+       http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd
+       http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd
+       http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+	<description>et-web</description>
+		<!-- <bean id="wxMpService" class="me.chanjar.weixin.mp.api.WxMpService">
+		<property name="wxService">
+			<bean class="me.chanjar.weixin.mp.api.impl.WxMpServiceImpl"></bean>
+		</property>
+	</bean> -->
+	<bean id="springContextHolder" class="com.etiot.utils.page.SpringContextHolder"  />
+		<bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+	     <property name="dataSource" ref="dataSource" />
+	 </bean>
+	 
+	 <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="dataSource" />
+		<property name="configLocation" value="classpath:mybatis-config.xml"/>
+		<!-- 自动扫描entity目录, 省掉Configuration.xml里的手工配置-->
+		<property name="typeAliasesPackage" ref="typeAliasesPackageProp" /> 
+		<property name="databaseIdProvider" ref="databaseIdProvider" />
+		<!-- 
+		<property name="typeAliases" ref="typeAliasesExtend" />
+		 -->
+		 
+		<property name="mapperLocations"  >
+			<list>
+				<value>classpath*:mapper/**/*Mapper.xml</value>
+			</list>
+		</property>
+		<property name="configurationProperties">
+			<props>
+				<prop key="SCHEMA_BASE">sell</prop>
+			</props>	
+		</property>
+				<!-- springbootvfs实现 解决springboot 打jar war包mybatis别名扫描问题 -->
+		<property name="vfs" value="com.etiot.utils.page.SpringBootVFS"></property> 
+	</bean>
+	
+	<!-- 数据库类型定义,用于mapper文件中可判断数据库类型 -->
+	<bean id="vendorProperties"
+		class="org.springframework.beans.factory.config.PropertiesFactoryBean">
+		<property name="properties">
+			<props>
+				<prop key="DB2">db2</prop>
+				<prop key="Oracle">oracle</prop>
+				<prop key="MySQL">mysql</prop>
+			</props>
+		</property>
+	</bean>
+	<!-- 支持multi-db适应多种数据库 -->
+	<bean id="databaseIdProvider" class="org.apache.ibatis.mapping.VendorDatabaseIdProvider">
+		<property name="properties" ref="vendorProperties" />
+	</bean>
+	<!--typeAliases 扫描包定义 -->
+	<bean id="typeAliasesPackageProp" class="com.etiot.utils.page.TypeAliasesPackagePropExtend">
+		<property name="typeAliasesPackages">
+			<list>
+				<value>com.etiot.**.entity</value>
+			</list>
+		</property>
+		<property name="rootPackage" value="com/etiot/" />
+	</bean>
+	
+	<bean id="typeAliasesExtend" class="com.etiot.utils.page.TypeAliasesExtend">
+		<property name="typeAliasesPackages">
+			<list>
+				<value>com.etiot.**.entity</value>
+			</list>
+		</property>
+	</bean>
+	
+	<bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+		<property name="basePackage" value="com.etiot.**.dao" />
+		<property name="sqlSessionFactoryBeanName" value="sqlSessionFactory" />
+	</bean>
+	
+	 <!-- 注入session工厂，可直接使用sqlsession -->
+	<bean id="sqlSession" class="org.mybatis.spring.SqlSessionTemplate">
+		<constructor-arg index="0" ref="sqlSessionFactory" />
+	</bean>
+</beans>
+
